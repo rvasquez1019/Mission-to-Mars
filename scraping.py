@@ -1,72 +1,132 @@
-# Import Splinter and BeautifulSoup
+# Import Splinter, BeautifulSoup, and Pandas
 from splinter import Browser
 from bs4 import BeautifulSoup
 import pandas as pd
+import datetime as dt
+  
 
-# Set the executable path and initialize the chrome browser in splinter
-executable_path = {'executable_path': 'chromedriver'}
-browser = Browser('chrome', **executable_path)
+def scrape_all():
+    # Initiate headless driver for deployment
+    browser = Browser("chrome", executable_path="chromedriver", headless=True)
 
-# Visit the mars nasa news site
-url = 'https://mars.nasa.gov/news/'
-browser.visit(url)
-# Optional delay for loading the page
-browser.is_element_present_by_css("ul.item_list li.slide", wait_time=1)
+    news_title, news_paragraph = mars_news(browser)
 
-# Set up the html parser
-html = browser.html
-news_soup = BeautifulSoup(html, 'html.parser')
-slide_elem = news_soup.select_one('ul.item_list li.slide')
+    # Run all scraping functions and store results in a dictionary
+    data = {
+        "news_title": newsTitle,
+        "news_paragraph": newsParagraph,
+        "featured_image": featuredImage(browser),
+        "facts": marsFacts(),
+        "last_modified": dt.datetime.now()
+    }
+    # Hemisphere     
+        # "hemisphere1_url": hemispheres[0]["img_url"],
+        # "hemisphere1_title": hemispheres[0]["title"],
+        # "hemisphere2_url": hemispheres[1]["img_url"],
+        # "hemisphere2_title": hemispheres[1]["title"],
+        # "hemisphere3_url": hemispheres[2]["img_url"],
+        # "hemisphere3_title": hemispheres[2]["title"],
+        # "hemisphere4_url": hemispheres[3]["img_url"],
+        # "hemisphere4_title": hemispheres[3]["title"],
+        
 
-# Begin the scraping 
-slide_elem.find("div", class_='content_title')
+    
+    # Stop webdriver and return data
+    browser.quit()
+    return data
 
-# Use the parent element to find the first `a` tag and save it as `news_title`
-news_title = slide_elem.find("div", class_='content_title').get_text()
-news_title
 
-# Use the parent element to find the paragraph text
-news_p = slide_elem.find('div', class_="article_teaser_body").get_text()
-news_p
 
-# Featured Images
+def marsMews(browser):
 
-# Visit URL
-url = 'https://www.jpl.nasa.gov/spaceimages/?search=&category=Mars'
-browser.visit(url)
+    # Scrape Mars News 
+    # Visit the mars nasa news site
+    url = 'https://mars.nasa.gov/news/'
+    browser.visit(url)
 
-# Find and click the full image button
-full_image_elem = browser.find_by_id('full_image')
-full_image_elem.click()
+    # Optional delay for loading the page
+    browser.is_element_present_by_css("ul.item_list li.slide", wait_time=1)
 
-# Find the more info button and click that
-browser.is_element_present_by_text('more info', wait_time=1)
-more_info_elem = browser.links.find_by_partial_text('more info')
-more_info_elem.click()
+    # Convert the browser html to a soup object and then quit the browser
+    html = browser.html
+    news_soup = BeautifulSoup(html, 'html.parser')
 
-# Parse the resulting html with soup
-html = browser.html
-img_soup = BeautifulSoup(html, 'html.parser')
+    # Add try/except for error handling
+    try:
+        slide_elem = news_soup.select_one("ul.item_list li.slide")
+        # Use the parent element to find the first 'a' tag and save it as 'news_title'
+        news_title = slide_elem.find("div", class_="content_title").get_text()
+        # Use the parent element to find the paragraph text
+        news_p = slide_elem.find("div", class_="article_teaser_body").get_text()
+    
+    except AttributeError:
+        return None, None
+    
+    return newsTitle, newsP
 
-# Find the relative image url
-img_url_rel = img_soup.select_one('figure.lede a img').get("src")
-img_url_rel
 
-# Use the base URL to create an absolute URL
-img_url = f'https://www.jpl.nasa.gov{img_url_rel}'
-img_url
+def featuredImage(browser):
 
-# Mars Facts
+    # Visit URL
+    url = 'https://www.jpl.nasa.gov/spaceimages/?search=&category=Mars'
+    browser.visit(url)
 
-# Scrape Mars Facts table using Pandas
-df = pd.read_html('http://space-facts.com/mars/')[0]
-df.columns=['description', 'value']
-df.set_index('description', inplace=True)
-df
+    # Find and click the full image button
+    fullImageElem = browser.find_by_id('full_image')
+    fullImageElem.click()
 
-# Convert our DataFrame back to HTML-ready code so that it can stay up to date
-df.to_html()
+    # Find the more info button and click that
+    browser.is_element_present_by_text('more info', wait_time=1)
+    moreInfoElem = browser.links.find_by_partial_text('more info')
+    moreInfoElem.click()
 
-# End the automated browsing session
-browser.quit()
+    # Parse the resulting html with soup
+    html = browser.html
+    imgSoup = BeautifulSoup(html, 'html.parser')
 
+
+    # Add try/except for error handling
+    try:
+        # Find the relative image url
+        imgUrlRel = imgSoup.select_one('figure.lede a img').get("src")
+
+    except AttributeError:
+        return None
+
+
+    # Use the base URL to create an absolute URL
+    imgUrl = f'https://www.jpl.nasa.gov{imgUrlRel}'
+    
+    return imgUrl
+
+
+def mars_facts():
+    
+    # Add try/except for error handling
+    try:
+        # Use 'read_html' to scrape the facts table into a dataframe 
+        df = pd.read_html('http://space-facts.com/mars/')[0]
+    
+    except BaseException:
+        return None
+
+    # Assign columns and set index of dataframe
+    df.columns=['Description', 'Mars']
+    df.set_index('Description', inplace=True)
+
+    # Convert dataframe into HTML format, add bootstrap 
+    return df.to_html(classes="table table-striped")
+
+# def getHemispheres(brower):
+
+# # Visit the mars nasa news site
+# url = 'https://astrogeology.usgs.gov/search/results?q=hemisphere+enhanced&k1=target&v1=Mars'
+# browser.visit(url) 
+
+# # Convert the browser html to a beautifulSoup object and the quit the browser 
+# html = browser.html
+# imgSoup = BeautifulSoup(html, 'html.parser')
+
+if __name__ == "__main__":
+    # If running as script, print scraped data
+    print(scrape_all())
