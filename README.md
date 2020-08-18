@@ -10,3 +10,8 @@ https://astrogeology.usgs.gov/search/results?q=hemisphere+enhanced&k1=target&v1=
 
 PORTFOLIO SCREENSHOTS
 
+https://astrogeology.usgs.gov/search/map/Mars/Viking/cerberus_enhanced
+https://astrogeology.usgs.gov/search/map/Mars/Viking/schiaparelli_enhanced
+https://astrogeology.usgs.gov/search/map/Mars/Viking/syrtis_major_enhanced
+https://astrogeology.usgs.gov/search/map/Mars/Viking/valles_marineris_enhanced
+
