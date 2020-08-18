@@ -12,30 +12,20 @@ def scrape_all():
     news_title, news_paragraph = mars_news(browser)
 
     # Run all scraping functions and store results in a dictionary
-    data = {
-        "news_title": newsTitle,
-        "news_paragraph": newsParagraph,
-        "featured_image": featuredImage(browser),
-        "facts": marsFacts(),
-        "last_modified": dt.datetime.now()
-    }
-    # Hemisphere     
-        # "hemisphere1_url": hemispheres[0]["img_url"],
-        # "hemisphere1_title": hemispheres[0]["title"],
-        # "hemisphere2_url": hemispheres[1]["img_url"],
-        # "hemisphere2_title": hemispheres[1]["title"],
-        # "hemisphere3_url": hemispheres[2]["img_url"],
-        # "hemisphere3_title": hemispheres[2]["title"],
-        # "hemisphere4_url": hemispheres[3]["img_url"],
-        # "hemisphere4_title": hemispheres[3]["title"],
-        
+    data = {"news_title": news_title,
+            "news_paragraph": news_paragraph,
+            "featured_image": featuredImage(browser),
+            "facts": mars_facts(),
+            "last_modified": dt.datetime.now(),
+            "cerberus" : get_cerberus(browser),
+            "schiaparelli": get_schiaparelli(browser),
+            "syrtis_major": get_syrtis_major(browser),
+            "valles_marineris": get_valles_marineris(browser)
+        }
 
-    
     # Stop webdriver and return data
     browser.quit()
     return data
-
-
 
 def marsMews(browser):
 
@@ -62,7 +52,7 @@ def marsMews(browser):
     except AttributeError:
         return None, None
     
-    return newsTitle, newsP
+    return news_title, news_p
 
 
 def featuredImage(browser):
@@ -71,34 +61,23 @@ def featuredImage(browser):
     url = 'https://www.jpl.nasa.gov/spaceimages/?search=&category=Mars'
     browser.visit(url)
 
-    # Find and click the full image button
-    fullImageElem = browser.find_by_id('full_image')
-    fullImageElem.click()
-
-    # Find the more info button and click that
-    browser.is_element_present_by_text('more info', wait_time=1)
-    moreInfoElem = browser.links.find_by_partial_text('more info')
-    moreInfoElem.click()
-
     # Parse the resulting html with soup
     html = browser.html
-    imgSoup = BeautifulSoup(html, 'html.parser')
-
+    img_soup = BeautifulSoup(html, 'html.parser')
 
     # Add try/except for error handling
     try:
         # Find the relative image url
-        imgUrlRel = imgSoup.select_one('figure.lede a img').get("src")
+        image_url = img_soup.find('div', class_ = 'carousel_items')('article')[0]['style'].\
+        replace('background-image: url(','').replace(');', '')[1:-1]
 
     except AttributeError:
         return None
 
-
     # Use the base URL to create an absolute URL
-    imgUrl = f'https://www.jpl.nasa.gov{imgUrlRel}'
+    img_url = f'https://www.jpl.nasa.gov{image_url}'
     
-    return imgUrl
-
+    return img_url
 
 def mars_facts():
     
@@ -115,17 +94,106 @@ def mars_facts():
     df.set_index('Description', inplace=True)
 
     # Convert dataframe into HTML format, add bootstrap 
-    return df.to_html(classes="table table-striped")
+    return df.to_html()
 
-# def getHemispheres(brower):
+def get_cerberus(brower):
 
 # # Visit the mars nasa news site
-# url = 'https://astrogeology.usgs.gov/search/results?q=hemisphere+enhanced&k1=target&v1=Mars'
-# browser.visit(url) 
+    url = 'https://astrogeology.usgs.gov/search/results?q=hemisphere+enhanced&k1=target&v1=Mars'
+    browser.visit(url) 
 
-# # Convert the browser html to a beautifulSoup object and the quit the browser 
-# html = browser.html
-# imgSoup = BeautifulSoup(html, 'html.parser')
+def get_schiaparelli(browser):
+    # ### Scrape Featured Image from USGS site
+    ### Get Mars Hemisphere images
+
+    # Visit URL: USGS
+    url = 'https://astrogeology.usgs.gov/search/results?q=hemisphere+enhanced&k1=target&v1=Mars'
+    browser.visit(url)
+
+    hrefs = []
+    titles = []
+    for x in [0,1,2,3]:
+        # initial page click
+        browser.find_by_css('a.product-item h3')[x].click()
+        # get html from new page
+        html= browser.html
+        img_soup = BeautifulSoup(html, 'html.parser')
+        # get title
+        title_elem = imgs_soup.find('h2', class_ ='title').text
+        titles.append(title_elem)
+        # get href
+        href = imgs_soup.find('a', text = 'Sample').get('href')
+        hrefs.append(href)
+        browser.back()
+    
+    cerberus = hrefs[0]
+    schiaparelli = hrefs[1]
+    syrtis_major = hrefs[2]
+    valles_marineris = hrefs[3]
+
+    return schiaparelli
+
+def get_syrtis_major(browser):
+    # ### Scrape Featured Image from USGS site
+    ### Get Mars Hemisphere images
+
+    # Visit URL: USGS
+    url = 'https://astrogeology.usgs.gov/search/results?q=hemisphere+enhanced&k1=target&v1=Mars'
+    browser.visit(url)
+
+    hrefs = []
+    titles = []
+    for x in [0,1,2,3]:
+        # initial page click
+        browser.find_by_css('a.product-item h3')[x].click()
+        # get html from new page
+        html= browser.html
+        img_soup = BeautifulSoup(html, 'html.parser')
+        # get title
+        title_elem = imgs_soup.find('h2', class_ ='title').text
+        titles.append(title_elem)
+        # get href
+        href = imgs_soup.find('a', text = 'Sample').get('href')
+        hrefs.append(href)
+        browser.back()
+    
+    cerberus = hrefs[0]
+    schiaparelli = hrefs[1]
+    syrtis_major = hrefs[2]
+    valles_marineris = hrefs[3]
+
+    return syrtis_major
+
+def get_valles_marineris(browser):
+    # ### Scrape Featured Image from USGS site
+    ### Get Mars Hemisphere images
+
+    # Visit URL: USGS
+    url = 'https://astrogeology.usgs.gov/search/results?q=hemisphere+enhanced&k1=target&v1=Mars'
+    browser.visit(url)
+
+    hrefs = []
+    titles = []
+    for x in [0,1,2,3]:
+        # initial page click
+        browser.find_by_css('a.product-item h3')[x].click()
+        # get html from new page
+        html= browser.html
+        imgs_soup = BeautifulSoup(html, 'html.parser')
+        # get title
+        title_elem = imgs_soup.find('h2', class_ ='title').text
+        titles.append(title_elem)
+        # get href
+        href = imgs_soup.find('a', text = 'Sample').get('href')
+        hrefs.append(href)
+        browser.back()
+    
+    cerberus = hrefs[0]
+    schiaparelli = hrefs[1]
+    syrtis_major = hrefs[2]
+    valles_marineris = hrefs[3]
+
+    return valles_marineris
 
 if __name__ == "__main__":
     # If running as script, print scraped data
