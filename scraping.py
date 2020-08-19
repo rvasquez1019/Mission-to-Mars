@@ -27,7 +27,7 @@ def scrape_all():
     browser.quit()
     return data
 
-def marsMews(browser):
+def mars_news(browser):
 
     # Scrape Mars News 
     # Visit the mars nasa news site
@@ -61,6 +61,15 @@ def featuredImage(browser):
     url = 'https://www.jpl.nasa.gov/spaceimages/?search=&category=Mars'
     browser.visit(url)
 
+    # Find and click the full image button
+    full_image_elem = browser.find_by_id('full_image')[0]
+    full_image_elem.click()
+
+    # Find the more info button and click that
+    browser.is_element_present_by_text('more info', wait_time=1)
+    more_info_elem = browser.links.find_by_partial_text('more info')
+    more_info_elem.click()
+
     # Parse the resulting html with soup
     html = browser.html
     img_soup = BeautifulSoup(html, 'html.parser')
@@ -75,7 +84,7 @@ def featuredImage(browser):
         return None
 
     # Use the base URL to create an absolute URL
-    img_url = f'https://www.jpl.nasa.gov{image_url}'
+    img_url = f'https://www.jpl.nasa.gov{img_url}'
     
     return img_url
 
@@ -196,5 +205,6 @@ def get_valles_marineris(browser):
     return valles_marineris
 
 if __name__ == "__main__":
+    
     # If running as script, print scraped data
     print(scrape_all())
